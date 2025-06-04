@@ -18,17 +18,28 @@ class AudioRecorder:
     def __init__(self, sample_rate=44100, buffer_seconds=15):
         self.sample_rate = sample_rate
         self.buffer_seconds = buffer_seconds
-        self.speaker = sc.get_speaker(sc.default_speaker().name)
         self.output_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'ToxiGuard_Output')
         os.makedirs(self.output_dir, exist_ok=True)
+        self.loopback_mic = self._get_loopback_microphone()
+
+    def _get_loopback_microphone(self):
+        print("[ToxiGuard] Searching for VB-Cable device (CABLE Output)...")
+        all_mics = sc.all_microphones()
+        for mic in all_mics:
+            print(f" - {mic.name}")
+        mic = next((m for m in all_mics if 'cable output' in m.name.lower()), None)
+        if mic is None:
+            raise RuntimeError("[ToxiGuard] Could not find 'CABLE Output'. Make sure it's enabled and active.")
+        print(f"[ToxiGuard] Using loopback mic: {mic.name}")
+        return mic
 
     def start_recording(self):
-        print(f"[ToxiGuard] Monitoring system audio via: {self.speaker.name}")
+        print(f"[ToxiGuard] Monitoring system audio via: {self.loopback_mic.name}")
         print(f"[ToxiGuard] Output files will be saved to: {self.output_dir}")
 
     def get_last_seconds(self, seconds):
         numframes = int(self.sample_rate * seconds)
-        with self.speaker.recorder(samplerate=self.sample_rate) as rec:
+        with self.loopback_mic.recorder(samplerate=self.sample_rate) as rec:
             data = rec.record(numframes=numframes)
         return data
 
@@ -50,7 +61,7 @@ class ToxiGuardBackend:
 
     def capture_after_audio(self, duration=15, filename='after.wav'):
         print("[ToxiGuard] Capturing next 15 seconds of audio...")
-        with self.recorder.speaker.recorder(samplerate=self.recorder.sample_rate) as rec:
+        with self.recorder.loopback_mic.recorder(samplerate=self.recorder.sample_rate) as rec:
             data = rec.record(numframes=int(self.recorder.sample_rate * duration))
         return self.recorder.save_to_wav(data, filename)
 
@@ -79,7 +90,7 @@ class ToxiGuardBackend:
         self.recorder.save_to_wav(data, "_temp.wav")
         print("[ToxiGuard] Transcribing audio...")
         result = self.model.transcribe(tmp_path)
-        os.remove(tmp_path)
+        ##os.remove(tmp_path)##
         print(f"[ToxiGuard] Transcription result: {result['text']}")
         return result['text']
 
