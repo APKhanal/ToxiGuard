@@ -1,0 +1,18 @@
+{
+  "slurs": {
+    "words": ["faggot", "nigga", "coon"],
+    "severity": 5
+  },
+  "insults": {
+    "words": ["stupid", "idiot", "dumb", "trash", "noob"],
+    "severity": 2
+  },
+  "violence": {
+    "words": ["kill yourself", "die", "kys"],
+    "severity": 5
+  },
+  "swearing": {
+    "words": ["fuck", "bitch"],
+    "severity": 3
+  }
+}
