@@ -1,4 +1,5 @@
 {
+<<<<<<< HEAD
   "transcription": " Wait, did you start it? Okay, just making sure. Kill yourself, retort trash noobs, stupid idiot dumb fuck, bag it, bitch nigga, can't kill yourself, die.",
   "toxicity_score": 0.5384615384615384,
   "flagged_words": [
@@ -9,5 +10,11 @@
     "idiot",
     "dumb",
     "die"
+=======
+  "transcription": " What's that? Is it a computer? How many of my data? Oh, it's a horrible part of my data. It's not a mobile phone. Why do you keep looking at me like this? You're a dumb man. You're a dumb man.",
+  "toxicity_score": 0.07692307692307693,
+  "flagged_words": [
+    "dumb"
+>>>>>>> d5bbefb695f30d57f7fabc3110591f18a5a884ae
   ]
 }
