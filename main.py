@@ -1,13 +1,33 @@
-import soundcard as sc
-import numpy as np
+import sys
+print("Python path (sys.path):")
+for p in sys.path:
+    print(p)
+    
 import wave
 import os
-import sys
 import threading
 import subprocess
 import time
-import whisper
 import json
+
+# Handle non-standard imports with error checkingy
+try:
+    import numpy as np
+except ImportError:
+    print("Error: numpy module not found. Please install with: pip install numpy")
+    sys.exit(1)
+
+try:
+    import whisper
+except ImportError:
+    print("Error: whisper module not found. Please install with: pip install openai-whisper")
+    sys.exit(1)
+
+try:
+    import soundcard as sc
+except ImportError:
+    print("Error: soundcard module not found. Please install with: pip install soundcard")
+    sys.exit(1)
 
 TOXIC_KEYWORDS = [
     "kill yourself", "retard", "trash", "noob", "stupid", "idiot",
@@ -18,7 +38,7 @@ class AudioRecorder:
     def __init__(self, sample_rate=44100, buffer_seconds=15):
         self.sample_rate = sample_rate
         self.buffer_seconds = buffer_seconds
-        self.speaker = sc.get_speaker(sc.default_speaker().name)
+        self.speaker = sc.get_microphone(sc.default_microphone().name)
         self.output_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'ToxiGuard_Output')
         os.makedirs(self.output_dir, exist_ok=True)
 
@@ -33,8 +53,15 @@ class AudioRecorder:
         return data
 
     def save_to_wav(self, data, filename):
-        scaled = np.int16(data / np.max(np.abs(data)) * 32767)
-        filepath = os.path.join(self.output_dir, filename)
+        if np.any(data):  # Check if audio isn't completely silent
+            max_val = np.max(np.abs(data))
+            if max_val > 0:  # Prevent division by zero
+                scaled = np.int16(data / max_val * 32767)
+            else:
+                scaled = np.zeros_like(data, dtype=np.int16)
+        else:
+            scaled = np.zeros_like(data, dtype=np.int16)
+        filepath = os.path.join(self.output_dir,filename)
         with wave.open(filepath, 'wb') as wf:
             wf.setnchannels(data.shape[1])
             wf.setsampwidth(2)
@@ -79,7 +106,6 @@ class ToxiGuardBackend:
         self.recorder.save_to_wav(data, "_temp.wav")
         print("[ToxiGuard] Transcribing audio...")
         result = self.model.transcribe(tmp_path)
-        os.remove(tmp_path)
         print(f"[ToxiGuard] Transcription result: {result['text']}")
         return result['text']
 
